@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Keyframe Editor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #333;
+    }
+    
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #444;
+    }
+    
+    input[type="number"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background-color: #eee;
+      border-radius: 5px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    
+    .progress {
+      height: 100%;
+      background-color: #3b82f6;
+      border-radius: 5px;
+      width: 0%;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    button {
+      cursor: pointer;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    button svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background-color: #2563eb;
+    }
+    
+    .btn-secondary {
+      background-color: #e5e7eb;
+      color: #374151;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #d1d5db;
+    }
+    
+    .btn-success {
+      background-color: #10b981;
+      color: white;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+      background-color: #059669;
+    }
+    
+    .btn-danger {
+      background-color: #ef4444;
+      color: white;
+    }
+    
+    .btn-danger:hover:not(:disabled) {
+      background-color: #dc2626;
+    }
+    
+    .keyframes-container {
+      margin-top: 24px;
+    }
+    
+    .keyframes-header {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    
+    .keyframes-list {
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .keyframe-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .keyframe-item:last-child {
+      border-bottom: none;
+    }
+    
+    .keyframe-item:hover {
+      background-color: #f9fafb;
+    }
+    
+    .keyframe-item.selected {
+      background-color: #e0f2fe;
+    }
+    
+    .keyframe-info {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .keyframe-label {
+      font-weight: 500;
+    }
+    
+    .keyframe-time {
+      color: #6b7280;
+    }
+    
+    .empty-message {
+      padding: 16px;
+      text-align: center;
+      color: #6b7280;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    
+    .data-preview {
+      margin-top: 24px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 16px;
+      background-color: #f9fafb;
+    }
+    
+    .preview-header {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    
+    .preview-content {
+      max-height: 240px;
+      overflow-y: auto;
+      background-color: white;
+      padding: 12px;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Audio Keyframe Editor</h1>
+    
+    <div class="input-group">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <label for="number-of-slides">Number of Slides:</label>
+        <input 
+          type="number" 
+          id="number-of-slides" 
+          min="1" 
+          value="28" 
+          style="width: 100px;"
+        >
+      </div>
+    </div>
+    
+    <div class="input-group">
+      <label for="audio-file">Upload Audio File:</label>
+      <input 
+        type="file" 
+        id="audio-file" 
+        accept="audio/*"
+      >
+    </div>
+    
+    <div id="player-container" style="display: none;">
+      <audio id="audio-player"></audio>
+      
+      <div class="time-display">
+        <span id="current-time">00:00.000</span>
+        <span id="duration">00:00.000</span>
+      </div>
+      
+      <div class="progress-bar">
+        <div class="progress" id="progress-bar"></div>
+      </div>
+      
+      <div class="controls">
+        <button class="btn-secondary" id="skip-backward">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+          Skip -5s
+        </button>
+        
+        <button class="btn-primary" id="play-pause">
+          <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          <span id="play-pause-text">Play</span>
+        </button>
+        
+        <button class="btn-secondary" id="skip-forward">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19"></line>
+          </svg>
+          Skip +5s
+        </button>
+        
+        <button class="btn-success" id="add-keyframe">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Keyframe
+        </button>
+      </div>
+      
+      <div class="keyframes-container">
+        <h2 class="keyframes-header">Keyframes</h2>
+        <div class="keyframes-list" id="keyframes-list">
+          <div class="empty-message">
+            No keyframes yet. Play the audio and press the + button to mark slide transitions.
+          </div>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn-secondary" id="preview-data" disabled>
+          Preview Data
+        </button>
+        
+        <button class="btn-primary" id="save-keyframes" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Save Keyframes
+        </button>
+      </div>
+      
+      <div class="data-preview" id="data-preview" style="display: none;">
+        <h2 class="preview-header">Data Preview</h2>
+        <div class="preview-content" id="preview-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const audioFile = document.getElementById('audio-file');
+    const audioPlayer = document.getElementById('audio-player');
+    const playerContainer = document.getElementById('player-container');
+    const numberOfSlides = document.getElementById('number-of-slides');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration');
+    const progressBar = document.getElementById('progress-bar');
+    const playPauseBtn = document.getElementById('play-pause');
+    const playPauseText = document.getElementById('play-pause-text');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const skipBackwardBtn = document.getElementById('skip-backward');
+    const skipForwardBtn = document.getElementById('skip-forward');
+    const addKeyframeBtn = document.getElementById('add-keyframe');
+    const keyframesList = document.getElementById('keyframes-list');
+    const previewDataBtn = document.getElementById('preview-data');
+    const saveKeyframesBtn = document.getElementById('save-keyframes');
+    const dataPreview = document.getElementById('data-preview');
+    const previewContent = document.getElementById('preview-content');
+
+    // State
+    let keyframes = [];
+    let selectedKeyframeIndex = -1;
+    
+    // Event Listeners
+    audioFile.addEventListener('change', handleFileChange);
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    skipBackwardBtn.addEventListener('click', skipBackward);
+    skipForwardBtn.addEventListener('click', skipForward);
+    addKeyframeBtn.addEventListener('click', addKeyframe);
+    previewDataBtn.addEventListener('click', previewData);
+    saveKeyframesBtn.addEventListener('click', saveKeyframes);
+    
+    // Functions
+    function handleFileChange(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const url = URL.createObjectURL(file);
+      audioPlayer.src = url;
+      
+      // Reset keyframes
+      keyframes = [];
+      selectedKeyframeIndex = -1;
+      updateKeyframesList();
+      
+      // Show player
+      playerContainer.style.display = 'block';
+      
+      // Setup player events
+      setupAudioPlayerEvents();
+      
+      // Reset buttons
+      previewDataBtn.disabled = true;
+      saveKeyframesBtn.disabled = true;
+      dataPreview.style.display = 'none';
+    }
+    
+    function setupAudioPlayerEvents() {
+      // Update time
+      audioPlayer.addEventListener('timeupdate', () => {
+        currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressBar.style.width = `${progress}%`;
+      });
+      
+      // Update duration
+      audioPlayer.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audioPlayer.duration);
+      });
+      
+      // Reset play/pause on ended
+      audioPlayer.addEventListener('ended', () => {
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+        playPauseText.textContent = 'Play';
+      });
+    }
+    
+    function togglePlayPause() {
+      if (audioPlayer.paused) {
+        audioPlayer.play();
+        playIcon.style.display = 'none';
+        pauseIcon.style.display = 'block';
+        playPauseText.textContent = 'Pause';
+      } else {
+        audioPlayer.pause();
+        playIcon.style.display = 'block';
+        pauseIcon.style.display = 'none';
+        playPauseText.textContent = 'Play';
+      }
+    }
+    
+    function skipBackward() {
+      audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+    }
+    
+    function skipForward() {
+      audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 5);
+    }
+    
+    function addKeyframe() {
+      const time = audioPlayer.currentTime;
+      
+      // Check if a keyframe with similar time already exists (within 0.5 seconds)
+      const similarExists = keyframes.some(kf => Math.abs(kf.time - time) < 0.5);
+      
+      if (!similarExists) {
+        const slideIndex = keyframes.length;
+        const newKeyframe = { time, slideIndex };
+        
+        // Insert the keyframe in the correct position (sorted by time)
+        const updatedKeyframes = [...keyframes, newKeyframe].sort((a, b) => a.time - b.time);
+        
+        // Update slideIndex values to match their new positions
+        keyframes = updatedKeyframes.map((kf, idx) => ({
+          ...kf,
+          slideIndex: idx
+        }));
+        
+        // Update UI
+        updateKeyframesList();
+        
+        // Enable buttons
+        previewDataBtn.disabled = false;
+        saveKeyframesBtn.disabled = false;
+      }
+    }
+    
+    function updateKeyframesList() {
+      // Clear list
+      keyframesList.innerHTML = '';
+      
+      if (keyframes.length === 0) {
+        keyframesList.innerHTML = `
+          <div class="empty-message">
+            No keyframes yet. Play the audio and press the + button to mark slide transitions.
+          </div>
+        `;
+        return;
+      }
+      
+      // Add keyframes
+      keyframes.forEach((keyframe, index) => {
+        const keyframeEl = document.createElement('div');
+        keyframeEl.className = `keyframe-item ${selectedKeyframeIndex === index ? 'selected' : ''}`;
+        keyframeEl.innerHTML = `
+          <div class="keyframe-info">
+            <span class="keyframe-label">Slide ${keyframe.slideIndex + 1}</span>
+            <span class="keyframe-time">at ${formatTime(keyframe.time)}</span>
+          </div>
+          <button class="btn-danger" data-index="${index}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+        `;
+        
+        // Add click event to go to keyframe
+        keyframeEl.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return; // Don't select when clicking delete
+          goToKeyframe(index);
+        });
+        
+        // Add click event to delete button
+        const deleteBtn = keyframeEl.querySelector('button');
+        deleteBtn.addEventListener('click', () => {
+          deleteKeyframe(index);
+        });
+        
+        keyframesList.appendChild(keyframeEl);
+      });
+    }
+    
+    function goToKeyframe(index) {
+      if (index < 0 || index >= keyframes.length) return;
+      
+      audioPlayer.currentTime = keyframes[index].time;
+      selectedKeyframeIndex = index;
+      updateKeyframesList();
+    }
+    
+    function deleteKeyframe(index) {
+      if (index < 0 || index >= keyframes.length) return;
+      
+      // Remove keyframe
+      keyframes.splice(index, 1);
+      
+      // Update slideIndex values
+      keyframes = keyframes.map((kf, idx) => ({
+        ...kf,
+        slideIndex: idx
+      }));
+      
+      // Update UI
+      selectedKeyframeIndex = -1;
+      updateKeyframesList();
+      
+      // Disable buttons if no keyframes
+      if (keyframes.length === 0) {
+        previewDataBtn.disabled = true;
+        saveKeyframesBtn.disabled = true;
+        dataPreview.style.display = 'none';
+      }
+    }
+    
+    function previewData() {
+      if (keyframes.length === 0) return;
+      
+      // Calculate durations between keyframes
+      const formattedKeyframes = calculateFormattedKeyframes();
+      
+      // Show preview
+      dataPreview.style.display = 'block';
+      previewContent.textContent = JSON.stringify(formattedKeyframes, null, 2);
+    }
+    
+    function saveKeyframes() {
+      if (keyframes.length === 0) return;
+      
+      // Calculate durations between keyframes
+      const formattedKeyframes = calculateFormattedKeyframes();
+      
+      // Create a formatted text output of keyframes
+      const output = formattedKeyframes.map(frame => 
+        `Image ${frame.image_number}: ${frame.image_name}, Duration: ${frame.Duration}s`
+      ).join('\n');
+      
+      // Create a JSON output
+      const jsonOutput = JSON.stringify(formattedKeyframes, null, 2);
+      
+      // Create a blob with the text content
+      const textBlob = new Blob([output], { type: 'text/plain' });
+      const jsonBlob = new Blob([jsonOutput], { type: 'application/json' });
+      
+      // Create download links
+      const textUrl = URL.createObjectURL(textBlob);
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      
+      // Create temporary anchor elements to trigger downloads
+      const textAnchor = document.createElement('a');
+      textAnchor.href = textUrl;
+      textAnchor.download = 'slide_timings.txt';
+      textAnchor.click();
+      
+      const jsonAnchor = document.createElement('a');
+      jsonAnchor.href = jsonUrl;
+      jsonAnchor.download = 'slide_timings.json';
+      jsonAnchor.click();
+      
+      // Clean up
+      URL.revokeObjectURL(textUrl);
+      URL.revokeObjectURL(jsonUrl);
+    }
+    
+    function calculateFormattedKeyframes() {
+      const formattedKeyframes = [];
+      
+      for (let i = 0; i < keyframes.length; i++) {
+        const currentFrame = keyframes[i];
+        const nextFrame = i < keyframes.length - 1 ? keyframes[i + 1] : { time: audioPlayer.duration };
+        
+        // Calculate duration between current and next keyframe
+        const durationSeconds = nextFrame.time - currentFrame.time;
+        
+        // Format to one decimal place
+        const roundedDuration = Math.round(durationSeconds * 10) / 10;
+        
+        formattedKeyframes.push({
+          image_number: currentFrame.slideIndex + 1,
+          image_name: `${currentFrame.slideIndex + 1}.png`,
+          Duration: roundedDuration
+        });
+      }
+      
+      return formattedKeyframes;
+    }
+    
+    function formatTime(timeInSeconds) {
+      const minutes = Math.floor(timeInSeconds / 60);
+      const seconds = Math.floor(timeInSeconds % 60);
+      const milliseconds = Math.floor((timeInSeconds % 1) * 1000);
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+    }
+  </script>
+</body>
+</html>
