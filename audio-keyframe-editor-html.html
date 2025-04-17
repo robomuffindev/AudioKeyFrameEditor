@@ -66,7 +66,8 @@
       background-color: #eee;
       border-radius: 5px;
       margin-bottom: 16px;
-      overflow: hidden;
+      position: relative;
+      cursor: pointer;
     }
     
     .progress {
@@ -74,6 +75,26 @@
       background-color: #3b82f6;
       border-radius: 5px;
       width: 0%;
+    }
+    
+    .progress-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #2563eb;
+      border-radius: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      left: 0%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: box-shadow 0.2s, width 0.2s, height 0.2s;
+      z-index: 2;
+    }
+    
+    .progress-handle:hover, .progress-handle.dragging {
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      width: 20px;
+      height: 20px;
     }
     
     .controls {
@@ -267,8 +288,9 @@
         <span id="duration">00:00.000</span>
       </div>
       
-      <div class="progress-bar">
+      <div class="progress-bar" id="progress-container">
         <div class="progress" id="progress-bar"></div>
+        <div class="progress-handle" id="progress-handle"></div>
       </div>
       
       <div class="controls">
@@ -347,7 +369,9 @@
     const numberOfSlides = document.getElementById('number-of-slides');
     const currentTimeEl = document.getElementById('current-time');
     const durationEl = document.getElementById('duration');
+    const progressContainer = document.getElementById('progress-container');
     const progressBar = document.getElementById('progress-bar');
+    const progressHandle = document.getElementById('progress-handle');
     const playPauseBtn = document.getElementById('play-pause');
     const playPauseText = document.getElementById('play-pause-text');
     const playIcon = document.getElementById('play-icon');
@@ -373,6 +397,11 @@
     addKeyframeBtn.addEventListener('click', addKeyframe);
     previewDataBtn.addEventListener('click', previewData);
     saveKeyframesBtn.addEventListener('click', saveKeyframes);
+    
+    // Progress bar interaction
+    progressContainer.addEventListener('mousedown', startSeeking);
+    document.addEventListener('mousemove', updateSeeking);
+    document.addEventListener('mouseup', endSeeking);
     
     // Functions
     function handleFileChange(e) {
@@ -405,6 +434,7 @@
         currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
         const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
         progressBar.style.width = `${progress}%`;
+        progressHandle.style.left = `${progress}%`;
       });
       
       // Update duration
@@ -418,6 +448,42 @@
         pauseIcon.style.display = 'none';
         playPauseText.textContent = 'Play';
       });
+    }
+    
+    // Progress bar seeking functionality
+    let isDragging = false;
+    
+    function startSeeking(e) {
+      isDragging = true;
+      progressHandle.classList.add('dragging');
+      updateSeekPosition(e);
+    }
+    
+    function updateSeeking(e) {
+      if (!isDragging) return;
+      updateSeekPosition(e);
+    }
+    
+    function endSeeking() {
+      if (!isDragging) return;
+      isDragging = false;
+      progressHandle.classList.remove('dragging');
+    }
+    
+    function updateSeekPosition(e) {
+      if (!audioPlayer.duration) return;
+      
+      // Calculate position
+      const rect = progressContainer.getBoundingClientRect();
+      const position = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      
+      // Update time
+      audioPlayer.currentTime = position * audioPlayer.duration;
+      
+      // Update UI
+      const percent = position * 100;
+      progressBar.style.width = `${percent}%`;
+      progressHandle.style.left = `${percent}%`;
     }
     
     function togglePlayPause() {
