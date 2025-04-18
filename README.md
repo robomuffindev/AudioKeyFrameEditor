@@ -113,7 +113,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
+contact@robomuffin.com
 
 Project Link: [https://github.com/yourusername/audio-keyframe-editor](https://github.com/yourusername/audio-keyframe-editor)
 
