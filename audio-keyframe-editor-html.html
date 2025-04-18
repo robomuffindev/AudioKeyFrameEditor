@@ -414,7 +414,6 @@
       // Reset keyframes
       keyframes = [];
       selectedKeyframeIndex = -1;
-      updateKeyframesList();
       
       // Show player
       playerContainer.style.display = 'block';
@@ -426,6 +425,20 @@
       previewDataBtn.disabled = true;
       saveKeyframesBtn.disabled = true;
       dataPreview.style.display = 'none';
+      
+      // Wait for metadata to load before creating the first keyframe
+      audioPlayer.addEventListener('loadedmetadata', function onceLoaded() {
+        // Create first keyframe at 0:00
+        keyframes = [{ time: 0, slideIndex: 0 }];
+        updateKeyframesList();
+        
+        // Enable buttons
+        previewDataBtn.disabled = false;
+        saveKeyframesBtn.disabled = false;
+        
+        // Remove this one-time event listener
+        audioPlayer.removeEventListener('loadedmetadata', onceLoaded);
+      }, { once: true });
     }
     
     function setupAudioPlayerEvents() {
