@@ -2,7 +2,8 @@
 
 A simple, browser-based tool for creating slide timing data from audio narrations. This tool allows you to mark keyframes while listening to your audio narration, helping you synchronize slides or images with your audio content.
 
-![Audio Keyframe Editor Screenshot](https://via.placeholder.com/800x500)
+![AudioKeyframeEditor_screenshot](https://github.com/user-attachments/assets/15636c6f-a6f5-430c-94e0-0f13fa9b5a36)
+
 
 ## Features
 
