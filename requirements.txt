@@ -1,0 +1,8 @@
+# START OF FILE requirements.txt
+numpy>=1.20.0
+# matplotlib>=3.4.0 # Removed
+librosa>=0.8.1 # Handles various audio formats
+pillow>=8.2.0 # For image handling (slides)
+# scipy>=1.6.0 # Removed (Dependency for librosa/matplotlib - check if librosa still needs it implicitly)
+pygame>=2.0.1 # For audio playback
+# END OF FILE requirements.txt
